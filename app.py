@@ -2369,5 +2369,6 @@ def editar_perfil():
     mensagem = 'Perfil atualizado com sucesso!'
     return render_template('clientes/perfil.html', mensagem=mensagem, usuario=novo_usuario, nome=novo_nome, sobrenome=novo_sobrenome, foto=nova_foto)
 
-if __name__ == '__main__':
-    app.run(debug=True)
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))  # Usa a porta do Render ou 5000 localmente
+    app.run(host="0.0.0.0", port=port)
