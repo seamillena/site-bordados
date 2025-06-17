@@ -1,0 +1,22 @@
+# Ignorar arquivos do Windows e do sistema
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Ignorar arquivos do OneDrive
+OneDrive/
+
+# Ignorar arquivos de log e temporários
+*.log
+*.tmp
+
+# Ignorar arquivos do Windows user profile
+NTUSER.DAT*
+ntuser.ini
+
+# Ignorar pastas e arquivos que não quer versionar
+repudiar/
+Saved Games/
+Searches/
+Videos/

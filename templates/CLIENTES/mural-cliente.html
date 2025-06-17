@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Contato</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
+
+</head>
+<body>
+        <nav>
+        <div class="botao-perfil">
+        <div class="foto-perfil">
+            {% if usuario %}
+                <a href="{{ url_for('perfil') }}">
+                    <img src="{{ url_for('static', filename='imagens/' ~ (foto or 'user.png')) }}">
+                </a>
+            {% else %}
+                <img src="{{ url_for('static', filename='imagens/user.png') }}">
+            {% endif %}
+        </div>
+    
+        {%if nome and sobrenome %}
+            <a href="{{url_for('perfil')}}">{{nome}} {{sobrenome}}</a>
+        {% else %}
+            <a href="{{url_for('perfil')}}">Usuário</a>
+        {% endif %}
+      </div>
+
+        <a href="/inicio-cliente">Início</a> |
+        <a href="/catalogo-cliente">Catálogo</a> |
+        <a href="/mural-cliente">Mural</a> |
+        <a href="/carrinho-cliente">Carrinho</a> |
+        <a href="/pedido-cliente"> Pedidos </a> |
+        <a href="/logout" onclick="return confirm('Tem certeza que deseja sair?')">Logout</a>
+
+    </nav>
+
+    <header class="logo-header">
+        <a href="/inicio-cliente">
+            <img src="{{ url_for('static', filename='imagens/astronauta.png') }}" alt="Astronauta bordando">   
+            <div class="texto-logo">
+                <h1>O Astronauta</h1>
+                <h2>BORDADOS | CLIENTE</h2>
+            </div>
+        </a>
+    </header>
+    <div class="botao-centro">
+        <button class="botao" onclick="document.getElementById('formulario-publicacao').style.display='block'">Nova Publicação</button>
+    </div>
+    <div id="formulario-publicacao" style="display:none;">
+        <form method="post" enctype="multipart/form-data">
+            <label for="legenda">Legenda:</label><br>
+            <textarea name="legenda" id="legenda" required></textarea><br><br>
+
+            <label for="fotos">Fotos:</label><br>
+            <input type="file" name="fotos" id="fotos" multiple><br><br>
+
+            <button type="submit" class="botao">Publicar</button>
+        </form>
+    </div>
+
+    <div class="todas-publicacoes">
+    {% for item in mural %}
+        <div class="publicacao-container">
+
+
+
+            <div class="mural-usuario" >
+            {% if item['foto'] %}
+                <img src="{{ url_for('static', filename='imagens/' ~ item['foto']) }}">
+            {% else %}
+                <img src="{{ url_for('static', filename='imagens/user.png') }}">
+            {% endif %}
+                <p>
+                <strong>{{ item['nome'] }} {{ item['sobrenome'] }}</strong><br>
+                <small>{{ item['data_publicacao'].strftime('%d/%m/%Y') }} {{ item['hora_publicacao'] }}</small>
+                    {% if session['usuario'] == item['usuario'] %}
+                <form method="post" action="/excluir_publicacao/{{ item['publicacao'] }}" onsubmit="return confirm('Tem certeza que deseja excluir esta publicação?');">
+                    <button type="submit" class="botao-excluir">Excluir Publicação</button>
+                </form>
+            {% endif %}
+                </p>
+            </div>
+
+            <div class="legenda" style="margin-bottom: 10px;">
+                    <p>{{ item['legendas'] }}</p>
+            </div>
+        
+            <div class="carrossel-e-detalhes">
+                <div class="carrossel">
+                    <div class="carrossel-imagens" id="carrossel-imagens">
+                        {% if item['fotos'] %}
+                            {% set fotos = item['fotos'].split(',') %}
+                            {% for foto in fotos %}
+                                <img src="{{ url_for('static', filename='imagens/mural/' ~ foto.strip()) }}">
+                            {% endfor %}
+                        {% else %}
+                            {% set fotos = [] %}
+                        {% endif %}
+                        {% if fotos|length > 1 %}
+                        <div class="botoes-carrossel">
+                            <button onclick="mudarImagem(this, -1)">&#8249;</button>
+                            <button onclick="mudarImagem(this, 1)">&#8250;</button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>    
+            </div>  
+
+            <div class="curtida-comentario-mural" style="border-top: 1px solid #ccc; padding-top: 8px;">
+                <form method="post" action="/curtir" style="display:inline;">
+                    <input type="hidden" name="publicacao" value="{{ item['publicacao'] }}">
+                    <button type="submit">❤️ {{ item['curtidas'] }}</button>
+                </form>
+                <button type="button" onclick="toggleComentarios('{{ item.publicacao }}')">
+                    Comentários ({{ comentarios_por_post[item['publicacao']]|length }})
+                </button>
+            </div>
+
+            <div id="comentarios-{{ item['publicacao'] }}" style="display:none; margin-left: 20px;">
+                {% for comentario in comentarios_por_post[item['publicacao']] %}
+                    <p><strong>{{ comentario['usuario'] }}</strong>: {{ comentario['comentario'] }}</p>
+
+                    {% if session['usuario'] == comentario['usuario'] or session['tipo'] == 'administrador' %}
+                        <form method="post" action="/excluir_comentario/{{ comentario['id'] }}" onsubmit="return confirm('Excluir este comentário?');">
+                            <button type="submit" class="botao-excluir">Excluir</button>
+                        </form>
+                    {% endif %}
+                {% endfor %}
+            
+                <form method="post" action="/comentario-cliente">
+                    <input type="hidden" name="publicacao" value="{{ item['publicacao'] }}">
+                    <label for="comentario">Novo comentário:</label><br>
+                    <textarea name="comentario" required></textarea><br>
+                    <button type="submit" class="botao">Comentar</button>
+                </form>
+
+            </div>
+        </div>     
+    {% endfor %}
+    </div>
+
+    <div class="instagram-fixo">
+        <a href="https://www.instagram.com/oastronauta.bordados/">
+            <img src="{{ url_for('static', filename='imagens/instagram.png') }}" alt="Instagram">
+        </a>
+    </div>
+    
+    <div class="whatsapp-fixo">
+        <a href="https://wa.me/5527997402134" target="_blank">
+            <img src="{{ url_for('static', filename='imagens/whatsapp.png') }}" alt="Whatsapp">
+        </a>
+    </div>
+
+        <div class="carrinho-fixo">
+            <a href="/carrinho-cliente">
+                <img src="{{ url_for('static', filename='imagens/carrinho.png') }}" alt="Carrinho">
+            </a>
+        </div>
+        <div class="carrinho-container">
+            {% if item_carrinho %}
+            <span class="bolinha-notificacao"></span>
+            {% endif %}
+        </div>
+    <footer class ="rodape">
+        <p>&copy; 2025 O Astronauta Bordados.</p>
+        {%for contato in contatos %}
+        <p>{{ contato['numero'] }} | {{ contato['email'] }} | {{ contato['insta'] }}</p>
+        {% endfor %}
+    </footer>
+    <script>
+        function mudarImagem(botao, direcao) {
+            const carrossel = botao.closest('.carrossel-imagens');
+            const imagens = carrossel.querySelectorAll('img');
+
+            // Pega o índice da imagem atualmente visível
+            let atualIndex = Array.from(imagens).findIndex(img => img.style.display !== 'none');
+
+            // Se nenhuma estiver visível, começa do 0
+            if (atualIndex === -1) atualIndex = 0;
+
+            let novoIndex = atualIndex + direcao;
+
+            if (novoIndex < 0) novoIndex = imagens.length - 1;
+            if (novoIndex >= imagens.length) novoIndex = 0;
+
+            imagens.forEach((img, index) => {
+                img.style.display = (index === novoIndex) ? 'block' : 'none';
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.carrossel-imagens').forEach(carrossel => {
+                const imagens = carrossel.querySelectorAll('img');
+                imagens.forEach((img, index) => {
+                    img.style.display = (index === 0) ? 'block' : 'none';
+                });
+            });
+        });
+        
+        function toggleComentarios(id) {
+            const comentarios = document.getElementById('comentarios-' + id);
+            if (comentarios.style.display === 'block') {
+                comentarios.style.display = 'none';
+            } else {
+                comentarios.style.display = 'block';
+            }
+        }
+
+        // Salva a posição do scroll antes de sair da página
+        window.onbeforeunload = function() {
+            sessionStorage.setItem('scrollPosition', window.scrollY);
+        };
+
+        // Restaura a posição do scroll quando a página é recarregada
+        window.onload = function() {
+            var scrollPosition = sessionStorage.getItem('scrollPosition');
+            if (scrollPosition) {
+                window.scrollTo(0, scrollPosition);
+            }
+        };
+    </script>
+</body>    
+</html>

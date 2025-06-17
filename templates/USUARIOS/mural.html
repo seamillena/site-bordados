@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Contato</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&family=Montserrat:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
+
+</head>
+<body>
+    <nav>
+        <a href="/">Início</a> |
+        <a href="/catalogo">Catálogo</a> |
+        <a href="/mural">Mural</a> |
+        <a href="/carrinho">Carrinho</a> |
+        <a href="pedido"> Pedidos </a> |
+        <a href="/login">Login</a>
+
+    </nav>
+
+    <header class="logo-header">
+        <a href="/">
+            <img src="{{ url_for('static', filename='imagens/astronauta.png') }}" alt="Astronauta bordando">   
+            <div class="texto-logo">
+                <h1>O Astronauta</h1>
+                <h2>BORDADOS</h2>
+            </div>
+        </a>
+    </header>
+    <p> Faça login para interagir com as publicações:</p>  
+    <div class="botao-centro">
+        
+        <a href="{{ url_for('login') }}" class="botao">Login</a>
+        <p></p>
+
+    </div>
+    <div class="todas-publicacoes">
+    {% for item in mural %}
+    <div class="publicacao-container">
+
+        <div class="mural-usuario" >
+            {% if item['foto'] %}
+                <img src="{{ url_for('static', filename='imagens/' ~ item['foto']) }}">
+            {% else %}
+                <img src="{{ url_for('static', filename='imagens/user.png') }}">
+            {% endif %}
+
+            <p>
+                <strong>{{ item['nome'] }} {{ item['sobrenome'] }}</strong><br>
+                <small>{{ item['data_publicacao'].strftime('%d/%m/%Y') }} {{ item['hora_publicacao'] }}</small>
+            </p>
+        </div>
+
+        <div class="legenda" style="margin-bottom: 10px;">
+            <p>{{ item['legendas'] }}</p>
+        </div>
+        <div class="carrossel-e-detalhes">
+            <div class="carrossel">
+                <div class="carrossel-imagens" id="carrossel-imagens">
+                    {% if item['fotos'] %}
+                        {% set fotos = item['fotos'].split(',') %}
+                        {% for foto in fotos %}
+                            <img src="{{ url_for('static', filename='imagens/mural/' ~ foto.strip()) }}">
+                        {% endfor %}
+                    {% else %}
+                        {% set fotos = [] %}
+                    {% endif %}
+                    {% if fotos|length > 1 %}
+                    <div class="botoes-carrossel">
+                        <button onclick="mudarImagem(this, -1)">&#8249;</button>
+                        <button onclick="mudarImagem(this, 1)">&#8250;</button>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>      
+        </div>
+
+        <div class="curtida-comentario-mural" style="border-top: 1px solid #ccc; padding-top: 8px;">
+            <p>
+                ❤️ {{ item['curtidas'] }}
+                <button type="button" onclick="toggleComentarios('{{ item.publicacao }}')">
+                    Comentários ({{ comentarios_por_post[item['publicacao']]|length }})
+                </button>
+
+            </p>
+
+            <!-- Comentários -->
+            <div class="comentarios" id="comentarios-{{ item['publicacao'] }}" style="display:none; margin-top: 10px;">
+                {% for comentario in comentarios_por_post[item['publicacao']] %}
+                    <p style="margin-bottom: 4px;"><strong>{{ comentario['usuario'] }}</strong>: {{ comentario['comentario'] }}</p>
+                {% endfor %}
+            </div>
+        </div>
+
+    </div>
+    {% endfor %}
+    </div>
+
+
+     
+     <div class="instagram-fixo">
+        <a href="https://www.instagram.com/oastronauta.bordados/">
+            <img src="{{ url_for('static', filename='imagens/instagram.png') }}" alt="Instagram">
+        </a>
+    </div>
+    
+    <div class="whatsapp-fixo">
+        <a href="https://wa.me/5527997402134" target="_blank">
+            <img src="{{ url_for('static', filename='imagens/whatsapp.png') }}" alt="Whatsapp">
+        </a>
+    </div>
+
+    <div class="carrinho-fixo">
+        <a href="/carrinho">
+            <img src="{{ url_for('static', filename='imagens/carrinho.png') }}" alt="Carrinho">
+        </a>
+    </div>
+
+    <div class="carrinho-container">
+        {% if item_carrinho %}
+        <span class="bolinha-notificacao"></span>
+        {% endif %}
+    </div>
+
+    <footer class ="rodape">
+        <p>&copy; 2025 O Astronauta Bordados.</p>
+        {%for contato in contatos %}
+        <p>{{ contato['numero'] }} | {{ contato['email'] }} | {{ contato['insta'] }}</p>
+        {% endfor %}
+    </footer>
+    <script>
+    function mudarImagem(botao, direcao) {
+        const carrossel = botao.closest('.carrossel-imagens');
+        const imagens = carrossel.querySelectorAll('img');
+
+        // Pega o índice da imagem atualmente visível
+        let atualIndex = Array.from(imagens).findIndex(img => img.style.display !== 'none');
+
+        // Se nenhuma estiver visível, começa do 0
+        if (atualIndex === -1) atualIndex = 0;
+
+        let novoIndex = atualIndex + direcao;
+
+        if (novoIndex < 0) novoIndex = imagens.length - 1;
+        if (novoIndex >= imagens.length) novoIndex = 0;
+
+        imagens.forEach((img, index) => {
+            img.style.display = (index === novoIndex) ? 'block' : 'none';
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Em cada carrossel, exibir apenas a primeira imagem
+        document.querySelectorAll('.carrossel-imagens').forEach(carrossel => {
+            const imagens = carrossel.querySelectorAll('img');
+            imagens.forEach((img, index) => {
+                img.style.display = (index === 0) ? 'block' : 'none';
+            });
+        });
+    });
+    
+    function toggleComentarios(id) {
+        const comentarios = document.getElementById('comentarios-' + id);
+        if (comentarios.style.display === 'block') {
+            comentarios.style.display = 'none';
+        } else {
+            comentarios.style.display = 'block';
+        }
+    }
+    </script>
+
+
+
+</body>
+</html>
+
+    
